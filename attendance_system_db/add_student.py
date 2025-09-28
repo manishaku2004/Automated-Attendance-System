@@ -1,6 +1,7 @@
 import sqlite3
 
-DB_PATH = "database/students.db"
+DB_PATH = r"C:\xampp\htdocs\automated attendance system\attendance_system_db\database\students.db"
+DATASET_PATH = r"C:\xampp\htdocs\automated attendance system\attendance_system_db\dataset"
 
 def add_student(name, roll_no, department):
     conn = sqlite3.connect(DB_PATH)
