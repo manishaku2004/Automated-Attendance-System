@@ -42,7 +42,7 @@ def capture_images(student_id, num_samples=20):
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("❌ Failed to capture frame from camera")
+            print("❌ failed to capture frame from camera")
             break
 
         count += 1
