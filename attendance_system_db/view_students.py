@@ -10,7 +10,7 @@ c = conn.cursor()
 c.execute("SELECT * FROM students")
 rows = c.fetchall()
 
-print("👩‍🎓 Students in Database:")
+print("👩‍🎓 Students in database:")
 for row in rows:
     print(row)
 
