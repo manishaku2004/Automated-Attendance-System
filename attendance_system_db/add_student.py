@@ -18,7 +18,7 @@ def add_student(name, roll_no, department):
 
 if __name__ == "__main__":
     name = input("Enter student name: ")
-    roll_no = input("Enter roll number: ")
+    roll_no = input("Enter Roll Number: ")
     department = input("Enter department: ")
 
     add_student(name, roll_no, department)
