@@ -1,64 +1,86 @@
-import face_recognition
 import cv2
 import os
+import face_recognition
 import pickle
-import sqlite3
+import mysql.connector
 
-# Database path
-DB_PATH = r"C:\xampp\htdocs\automated attendance system\attendance_system_db\database\students.db"
+# ------------------ Database Config ------------------
+DB_HOST = "localhost"
+DB_USER = "root"
+DB_PASS = ""
+DB_NAME = "attendance_system"
 
-# Dataset folder path
+# ------------------ Dataset Path ---------------------
 DATASET_PATH = "dataset"
 
-# Output pickle file
-ENCODINGS_PATH = "encodings.pickle"
+# ------------------ Output File ----------------------
+ENCODINGS_FILE = "encodings.pickle"
 
-print("[INFO] Loading student data from database...")
-conn = sqlite3.connect(DB_PATH)
-c = conn.cursor()
-c.execute("SELECT name FROM students")
-students = [row[0] for row in c.fetchall()]
-conn.close()
+def get_students_from_db():
+    """Fetch all students from database"""
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, user=DB_USER, password=DB_PASS, database=DB_NAME
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, roll_number FROM students")
+        students = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return students
+    except Exception as e:
+        print("[❌] Database connection error:", e)
+        return []
 
-print(f"[INFO] Found {len(students)} students in database.")
 
-knownEncodings = []
-knownNames = []
+def encode_faces():
+    print("[INFO] Loading student data from database...")
+    students = get_students_from_db()
+    print(f"[INFO] Found {len(students)} students in database.")
 
-for student in students:
-    student_folder = os.path.join(DATASET_PATH, student)
-    
-    if not os.path.exists(student_folder):
-        print(f"[WARNING] No images found for {student}, skipping...")
-        continue
+    knownEncodings = []
+    knownNames = []
 
-    for image_name in os.listdir(student_folder):
-        image_path = os.path.join(student_folder, image_name)
+    for student in students:
+        name = student[0]  # student name (same as folder name in dataset)
+        student_folder = os.path.join(DATASET_PATH, name)
 
-        # Load image
-        image = cv2.imread(image_path)
-        if image is None:
-            print(f"[ERROR] Could not read {image_path}, skipping...")
+        if not os.path.exists(student_folder):
+            print(f"[WARNING] No folder found for {name}, skipping...")
             continue
 
-        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        print(f"[INFO] Processing images for {name}...")
 
-        # Detect faces
-        boxes = face_recognition.face_locations(rgb, model="hog")
+        for img_name in os.listdir(student_folder):
+            img_path = os.path.join(student_folder, img_name)
 
-        # Compute encodings
-        encodings = face_recognition.face_encodings(rgb, boxes)
+            # load image
+            image = cv2.imread(img_path)
+            if image is None:
+                print(f"[WARNING] Could not load {img_path}, skipping...")
+                continue
 
-        for encoding in encodings:
-            knownEncodings.append(encoding)
-            knownNames.append(student)
+            # convert to RGB
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    print(f"[INFO] Processed images for {student}")
+            # detect face locations
+            boxes = face_recognition.face_locations(rgb, model="hog")
 
-# Save encodings to pickle
-print(f"[INFO] Serializing encodings to {ENCODINGS_PATH}...")
-data = {"encodings": knownEncodings, "names": knownNames}
-with open(ENCODINGS_PATH, "wb") as f:
-    f.write(pickle.dumps(data))
+            # encode the face
+            encodings = face_recognition.face_encodings(rgb, boxes)
 
-print("[✅] Encoding complete! Encodings saved to encodings.pickle")
+            for encoding in encodings:
+                knownEncodings.append(encoding)
+                knownNames.append(name)
+
+    # save encodings
+    print(f"[INFO] Serializing encodings to {ENCODINGS_FILE}...")
+    data = {"encodings": knownEncodings, "names": knownNames}
+    with open(ENCODINGS_FILE, "wb") as f:
+        f.write(pickle.dumps(data))
+
+    print("[✅] Encoding complete! Encodings saved to encodings.pickle")
+
+
+if __name__ == "__main__":
+    encode_faces()
