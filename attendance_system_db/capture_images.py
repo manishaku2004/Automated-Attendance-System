@@ -78,4 +78,4 @@ if __name__ == "__main__":
         student_id = int(input("Enter Student ID: "))
         capture_images(student_id, num_samples=20)
     except ValueError:
-        print("❌ Invalid Student ID. Please enter a number.")
+        print("Invalid Student ID. Please enter a number.")
