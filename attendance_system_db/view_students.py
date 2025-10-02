@@ -1,17 +1,28 @@
-import sqlite3
-import os
+import mysql.connector
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = r"C:\xampp\htdocs\automated attendance system\attendance_system_db\database\students.db"
-DATASET_PATH = r"C:\xampp\htdocs\automated attendance system\attendance_system_db\dataset"
+def view_students():
+    try:
+        # MySQL connection
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",   # अगर root पर password है तो डालो
+            database="attendance_system_db"
+        )
+        cursor = conn.cursor()
 
-conn = sqlite3.connect(DB_PATH)
-c = conn.cursor()
-c.execute("SELECT * FROM students")
-rows = c.fetchall()
+        cursor.execute("SELECT * FROM students")
+        rows = cursor.fetchall()
 
-print("👩‍🎓 Students in database:")
-for row in rows:
-    print(row)
+        print("👩‍🎓 Students in database:")
+        for row in rows:
+            print(row)
 
-conn.close()
+        cursor.close()
+        conn.close()
+
+    except mysql.connector.Error as err:
+        print(f"[❌] Database error: {err}")
+
+if __name__ == "__main__":
+    view_students()
